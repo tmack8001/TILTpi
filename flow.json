@@ -384,8 +384,8 @@
         "ret": "obj",
         "url": "",
         "tls": "",
-        "x": 3207.5,
-        "y": 117.5,
+        "x": 3280,
+        "y": 140,
         "wires": [
             [
                 "6cbfa171.d2106",
@@ -978,7 +978,7 @@
         "type": "function",
         "z": "a564595f.642818",
         "name": "Get Beer Name",
-        "func": "var color = flow.get('colordropdownSelect')||undefined;\nif (color !== undefined){\nvar beerArray = flow.get(color + \"-Beer\")||[\"\",true];\nif (beerArray[1] === true){\n    msg.payload = beerArray[0];\n}\nelse {\n    msg.payload = beerArray;\n}\nreturn msg;\n}",
+        "func": "var color = flow.get('colordropdownSelect')||undefined;\nif (color !== undefined){\n    var beerArray = flow.get(color + \"-Beer\")||[\"\",true];\n    if (beerArray[1] === true){\n        msg.payload = beerArray[0];\n    }\n    else {\n        msg.payload = beerArray;\n    }\n} else {\n    msg.enabled = false;\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 1580,
@@ -1020,7 +1020,7 @@
         "type": "function",
         "z": "a564595f.642818",
         "name": "Setup Cloud Post",
-        "func": "var postEnabled = (flow.get('logCloudDataCheck'))||false;\nvar interval = flow.get('loggingInterval')||15;\ninterval *= 60000;\nif (postEnabled && msg.payload.Color !== undefined){\n    var lastPost = flow.get('lastpost-' + msg.payload.Color)||0;\n    if (msg.payload.timeStamp - lastPost > interval){\n        flow.set('lastpost-' + msg.payload.Color,msg.payload.timeStamp);\n        //node.warn(msg.payload.Color + ' triggered');\n        //node.warn(msg.payload.timeStamp - lastPost);\n        msg.payload.Comment = flow.get(msg.payload.Color + \"-Comment\")||\"\";\n        msg.payload.Beer = flow.get(msg.payload.Color + \"-Beer\")||[\"Untitled\",true];\n        msg.topic = msg.payload.Color;\n        if (msg.payload.Beer[1] === true){\n            msg.payload.Beer = msg.payload.Beer[0];\n        }\n        //msg.headers = {};\n        //msg.headers['content-type'] = 'application/x-www-form-urlencoded; charset=utf-8';\n        var payloadEncoded = encodeURI(\"Timepoint=\" + msg.payload.Timepoint + \"&Temp=\" + msg.payload.Temp + \"&SG=\" + msg.payload.SG + \"&Beer=\" + msg.payload.Beer + \"&Color=\" + msg.payload.Color + \"&Comment=\" + msg.payload.Comment);\n        if (flow.get('cloudURL')[1] === true){\n            var defaultCloudURL = flow.get('cloudURL')[0];\n            node.send({ headers : { 'content-type' : 'application/x-www-form-urlencoded; charset=utf-8' }, url : defaultCloudURL, payload : payloadEncoded, cloudwait : 'Contacting Default Cloud URL...<br>(allow up to 30 seconds)' });\n        }\n        else{\n            var cloudURLs = flow.get('cloudURL-' + msg.payload.Color)||'none';\n            if (cloudURLs != 'none'){\n             var cloudURLsArray = cloudURLs.split(',');\n             for (var i = 0; i < cloudURLsArray.length; i++){\n                node.send({ headers : { 'content-type' : 'application/x-www-form-urlencoded; charset=utf-8' }, url : cloudURLsArray[i], payload : payloadEncoded, cloudwait : 'Contacting Cloud URL ' + (i + 1) + '...<br>(allow up to 30 seconds)' });\n              }\n             }\n            }\n}\n}",
+        "func": "var postEnabled = (flow.get('logCloudDataCheck'))||false;\nvar interval = flow.get('loggingInterval')||15;\ninterval *= 60000;\nif (postEnabled && msg.payload.Color !== undefined){\n    var lastPost = flow.get('lastpost-' + msg.payload.Color)||0;\n    if (msg.payload.timeStamp - lastPost > interval){\n        flow.set('lastpost-' + msg.payload.Color,msg.payload.timeStamp);\n        //node.warn(msg.payload.Color + ' triggered');\n        //node.warn(msg.payload.timeStamp - lastPost);\n        msg.payload.Comment = flow.get(msg.payload.Color + \"-Comment\")||\"\";\n        msg.payload.Beer = flow.get(msg.payload.Color + \"-Beer\")||[\"Untitled\",true];\n        msg.topic = msg.payload.Color;\n        if (msg.payload.Beer[1] === true){\n            msg.payload.Beer = msg.payload.Beer[0];\n        }\n        //msg.headers = {};\n        //msg.headers['content-type'] = 'application/x-www-form-urlencoded; charset=utf-8';\n        var payloadEncoded = encodeURI(\"Timepoint=\" + msg.payload.Timepoint + \"&Temp=\" + msg.payload.Temp + \"&SG=\" + msg.payload.SG + \"&Beer=\" + msg.payload.Beer + \"&Color=\" + msg.payload.Color + \"&Comment=\" + msg.payload.Comment);\n      \n        if (flow.get('cloudURL')[1] === true){\n            var defaultCloudURL = flow.get('cloudURL')[0];\n            node.send({ \n                headers : { \n                    'content-type' : 'application/x-www-form-urlencoded; charset=utf-8' \n                }, \n                url : defaultCloudURL, \n                payload : payloadEncoded, \n                cloudwait : 'Contacting Default Cloud URL...<br>(allow up to 30 seconds)' \n            });\n        }\n        else{\n            var cloudURLs = flow.get('cloudURL-' + msg.payload.Color)||'none';\n            if (cloudURLs != 'none'){\n             var cloudURLsArray = cloudURLs.split(',');\n             for (var i = 0; i < cloudURLsArray.length; i++){\n                // hack to get multiple cloud services logging to work (brewcrafter limitation)\n                var contentType = 'application/json';\n                if (i === 0) {\n                    contentType = 'application/x-www-form-urlencoded; charset=utf-8';\n                }\n                node.send({ \n                    headers : { \n                        'content-type' : contentType \n                    }, \n                    url : cloudURLsArray[i], \n                    payload : contentType == 'application/json' ? msg.payload : payloadEncoded, \n                    cloudwait : 'Contacting Cloud URL ' + (i + 1) + '...<br>(allow up to 30 seconds)' \n                });\n              }\n             }\n            }\n}\n}",
         "outputs": 1,
         "noerr": 0,
         "x": 2757.5,
@@ -1039,15 +1039,15 @@
         "label": "Cloud URL",
         "tooltip": "Separate cloud URLs with a comma (no space) for specifying multiple cloud URLs",
         "group": "19fab5c2.199ffa",
-        "order": 1,
+        "order": 3,
         "width": 0,
         "height": 0,
         "passthru": false,
         "mode": "text",
         "delay": "0",
         "topic": "",
-        "x": 1179.5003280639648,
-        "y": 699.000057220459,
+        "x": 1170,
+        "y": 720,
         "wires": [
             [
                 "c79f0193.2a7c7"
@@ -1061,7 +1061,7 @@
         "name": "",
         "label": "Start Logging to the Cloud",
         "group": "19fab5c2.199ffa",
-        "order": 3,
+        "order": 2,
         "width": 0,
         "height": 0,
         "passthru": true,
@@ -1108,8 +1108,8 @@
         "func": "var color = flow.get('colordropdownSelect')||\"\";\nflow.set('logCloudDataCheck',msg.payload);\nflow.set('lastpost-' + color,0);\nmsg.topic = \"TILT | \" + color;\nif (msg.payload){\nmsg.payload = \"Logging request sent. Waiting for response.\";\n}\nelse {\n    msg.payload = \"Logging disabled.\";\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 1596.5,
-        "y": 762,
+        "x": 1580,
+        "y": 740,
         "wires": [
             [
                 "8dec8962.63e398"
@@ -1288,6 +1288,7 @@
         "repeat": "1",
         "crontab": "",
         "once": false,
+        "onceDelay": "",
         "x": 1821.5,
         "y": 153,
         "wires": [
@@ -1432,7 +1433,8 @@
         "wires": [
             [
                 "6cbfa171.d2106",
-                "2836e0e1.4ea9c"
+                "2836e0e1.4ea9c",
+                "c9d0dfc1.9cca2"
             ]
         ]
     },
@@ -1684,6 +1686,7 @@
         "repeat": "1",
         "crontab": "",
         "once": false,
+        "onceDelay": "",
         "x": 1813.5,
         "y": 207,
         "wires": [
@@ -1884,7 +1887,7 @@
         "type": "function",
         "z": "a564595f.642818",
         "name": "update name, clear comment",
-        "func": "if (msg.payload.beername !== undefined){\nif (msg.payload.beername.indexOf(\",\") > -1){\nbeerArray = msg.payload.beername.split(\",\");\n//node.warn(msg.payload.beername[1]);\nflow.set(msg.payload.tiltcolor + \"-Beer\",beerArray);\n//node.warn(flow.get(msg.payload.tiltcolor + \"-Beer\"));\nflow.set(msg.payload.tiltcolor + \"-Comment\",\"\");\nif (msg.payload.doclongurl !== undefined) {\nflow.set(msg.payload.tiltcolor + \"-URL\",'<a href=\"' + msg.payload.doclongurl + '\" target=\"_blank\"> | View Cloud Log</a>');\n}\nmsg.payload = beerArray;\nreturn msg;\n}\n}",
+        "func": "if (msg.payload.beername !== undefined){\n    if (msg.payload.beername.indexOf(\",\") > -1){\n        beerArray = msg.payload.beername.split(\",\");\n        //node.warn(msg.payload.beername[1]);\n        flow.set(msg.payload.tiltcolor + \"-Beer\",beerArray);\n        //node.warn(flow.get(msg.payload.tiltcolor + \"-Beer\"));\n        flow.set(msg.payload.tiltcolor + \"-Comment\",\"\");\n        if (msg.payload.doclongurl !== undefined) {\n            flow.set(msg.payload.tiltcolor + \"-URL\",'<a href=\"' + msg.payload.doclongurl + '\" target=\"_blank\"> | View Cloud Log</a>');\n        }\n        msg.payload = beerArray;\n        return msg;\n    }\n}",
         "outputs": 1,
         "noerr": 0,
         "x": 3555,
@@ -1969,15 +1972,15 @@
         "label": "Comment",
         "tooltip": "",
         "group": "19fab5c2.199ffa",
-        "order": 6,
+        "order": 10,
         "width": "6",
         "height": "2",
         "passthru": false,
         "mode": "text",
         "delay": "0",
         "topic": "",
-        "x": 1257.5,
-        "y": 605,
+        "x": 1420,
+        "y": 540,
         "wires": [
             [
                 "e899ac8f.ec903"
@@ -2008,7 +2011,7 @@
         "name": "",
         "label": "Use Default Cloud URL for All",
         "group": "19fab5c2.199ffa",
-        "order": 2,
+        "order": 1,
         "width": 0,
         "height": 0,
         "passthru": true,
@@ -2023,8 +2026,8 @@
         "offvalueType": "bool",
         "officon": "",
         "offcolor": "",
-        "x": 706,
-        "y": 688.0000095367432,
+        "x": 650,
+        "y": 720,
         "wires": [
             [
                 "d599e3c9.1ae09"
@@ -2038,7 +2041,7 @@
         "name": "",
         "label": "Time Interval",
         "group": "19fab5c2.199ffa",
-        "order": 4,
+        "order": 8,
         "width": 0,
         "height": 0,
         "passthru": true,
@@ -2060,7 +2063,7 @@
         "type": "ui_text",
         "z": "a564595f.642818",
         "group": "19fab5c2.199ffa",
-        "order": 5,
+        "order": 9,
         "width": 0,
         "height": 0,
         "name": "",
@@ -2570,8 +2573,8 @@
         "repeat": "15",
         "crontab": "",
         "once": false,
-        "x": 1263.0002059936523,
-        "y": 815.0000438690186,
+        "x": 1290,
+        "y": 820,
         "wires": [
             [
                 "88a2c98f.f38b08"
@@ -3296,11 +3299,11 @@
         "type": "function",
         "z": "a564595f.642818",
         "name": "Custom CloudURL",
-        "func": "//get custom cloud URL if previously set\nvar color = flow.get('colordropdownSelect');\nif (msg.payload === true){\n       flow.set(\"cloudURL\",[\"https://script.google.com/macros/s/AKfycbwNXh6rEWoULd0vxWxDylG_PJwQwe0dn5hdtSkuC4k3D9AXBSA/exec\",true]);\n       msg.payload = flow.get(\"cloudURL\")[0];  \n}\nif (msg.payload === false){\n       flow.set(\"cloudURL\",[\"https://script.google.com/macros/s/AKfycbwNXh6rEWoULd0vxWxDylG_PJwQwe0dn5hdtSkuC4k3D9AXBSA/exec\",false]);\n       msg.payload = flow.get(\"cloudURL-\" + color)||\"Not set for \" + color;\n   }\nreturn msg;",
+        "func": "//get custom cloud URL if previously set\nvar color = flow.get('colordropdownSelect');\n\n// disable cloudUrl text field if no tilt selected\nmsg.enabled = color !== undefined;\n\nif (msg.payload === true){\n       flow.set(\"cloudURL\",[\"https://script.google.com/macros/s/AKfycbwNXh6rEWoULd0vxWxDylG_PJwQwe0dn5hdtSkuC4k3D9AXBSA/exec\",true]);\n       msg.payload = flow.get(\"cloudURL\")[0];  \n}\nif (msg.payload === false){\n       flow.set(\"cloudURL\",[\"https://script.google.com/macros/s/AKfycbwNXh6rEWoULd0vxWxDylG_PJwQwe0dn5hdtSkuC4k3D9AXBSA/exec\",false]);\n       msg.payload = flow.get(\"cloudURL-\" + color)||\"Not set for \" + color;\n   }\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 967.0000381469727,
-        "y": 690.0000305175781,
+        "x": 950,
+        "y": 720,
         "wires": [
             [
                 "edb75c90.8414"
@@ -3314,11 +3317,9 @@
         "position": "top right",
         "displayTime": "5",
         "highlight": "",
-        "sendall": true,
         "outputs": 0,
         "ok": "OK",
         "cancel": "",
-        "raw": true,
         "topic": "",
         "name": "Cloud URL Status",
         "x": 1577.5000076293945,
@@ -3450,7 +3451,8 @@
         "y": 460,
         "wires": [
             [
-                "423412c2.1b104c"
+                "423412c2.1b104c",
+                "b268c81f.526e38"
             ]
         ]
     },
@@ -3462,8 +3464,8 @@
         "func": "//only updates if custom Cloud URLs are in use\nvar check = flow.get('cloudURL')[1]||false;\nif (check === true){\n}else{\n    return msg;\n}\n",
         "outputs": 1,
         "noerr": 0,
-        "x": 463.74999237060547,
-        "y": 683.9097318649292,
+        "x": 420,
+        "y": 720,
         "wires": [
             [
                 "b1836d66.f976c"
@@ -3560,7 +3562,7 @@
         "type": "function",
         "z": "a564595f.642818",
         "name": "Set options",
-        "func": "//set default dropdown item if undefined\nmsg.options = msg.payload||[\"NONE\"];\nmsg.payload = flow.get('colordropdownSelect')||msg.options[0];\nreturn msg;",
+        "func": "//set default dropdown item if undefined\nmsg.options = msg.payload||[\"NONE\"];\n\n// msg.options = [msg.options[0], msg.options[1]];\n// flow.set('options', msg.options);\n\nmsg.payload = flow.get('colordropdownSelect')||msg.options[0];\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 570,
@@ -4903,14 +4905,14 @@
         "id": "d5884cdc.50b47",
         "type": "debug",
         "z": "a564595f.642818",
-        "name": "",
+        "name": "cloud service debugger",
         "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "true",
-        "x": 3419,
-        "y": 88,
+        "x": 3530,
+        "y": 80,
         "wires": []
     },
     {
@@ -5473,6 +5475,335 @@
         "wires": [
             [
                 "df1ac3a9.c4472"
+            ]
+        ]
+    },
+    {
+        "id": "c9d0dfc1.9cca2",
+        "type": "debug",
+        "z": "a564595f.642818",
+        "name": "http payload debug",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 3510,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "238c2c79.4952a4",
+        "type": "function",
+        "z": "a564595f.642818",
+        "name": "set cloudUrls",
+        "func": "//set default dropdown item if undefined\n// msg.options = msg.payload||[\"NONE\"];\n// msg.payload = flow.get('colordropdownSelect')||msg.options[0];\n// return msg;\n\nvar color = flow.get('colordropdownSelect');\n\n//set default dropdown item if undefined\nvar defaultCloudService = {\n    name: \"Default Google Sheets\",\n    url: \"https://script.google.com/macros/s/AKfycbwNXh6rEWoULd0vxWxDylG_PJwQwe0dn5hdtSkuC4k3D9AXBSA/exec\",\n    editable: false, // referring to name, url text and contentType configuration (interval is customizable)\n    enabled: true,\n    deletable: false,\n    contentType: 'application/x-www-form-urlencoded; charset=utf-8',\n    timeInterval: 5 // minutes\n}\n    \nvar addOption = {\n    name: \"Add New\",\n    url: \"\",\n    editable: true,\n    enabled: false,\n    deletable: false\n};\n\nif (msg.payload && msg.payload.length > 0) {\n    var option = [];\n    for (var i=0;i<msg.payload.length;i++) {\n        option.push(msg.payload[i].name);\n    }\n    msg.options = msg.payload[0].name;\n} else {\n    msg.options = [defaultCloudService.name,addOption.name];\n}\n\n// msg.cloudUrls.push(defaultUrl)\n// msg.cloudUrls.push(addOption)\n\n// fix so supports comma delimited\n// fix so supports dynamic list\nflow.set('cloudUrl2-' + color, [defaultCloudService, addOption])\nmsg.payload = flow.get('cloudUrl2-' + color)[0].name;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 410,
+        "y": 600,
+        "wires": [
+            [
+                "77db97a.6eee168"
+            ]
+        ]
+    },
+    {
+        "id": "77db97a.6eee168",
+        "type": "ui_dropdown",
+        "z": "a564595f.642818",
+        "name": "Cloud Logging Dropdown",
+        "label": "Cloud URL | ",
+        "tooltip": "",
+        "place": "Select Cloud URL",
+        "group": "19fab5c2.199ffa",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "options": [
+            {
+                "label": "",
+                "value": "",
+                "type": "str"
+            }
+        ],
+        "payload": "",
+        "topic": "",
+        "x": 590,
+        "y": 540,
+        "wires": [
+            [
+                "5d364fad.8f55",
+                "8c041649.eb6c08"
+            ]
+        ]
+    },
+    {
+        "id": "984afd07.48a98",
+        "type": "inject",
+        "z": "a564595f.642818",
+        "name": "Check Cloud Logging URLs",
+        "topic": "",
+        "payload": "cloudUrls",
+        "payloadType": "flow",
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "x": 180,
+        "y": 640,
+        "wires": [
+            [
+                "238c2c79.4952a4"
+            ]
+        ]
+    },
+    {
+        "id": "b268c81f.526e38",
+        "type": "debug",
+        "z": "a564595f.642818",
+        "name": "debug active tiles",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 530,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "8c041649.eb6c08",
+        "type": "debug",
+        "z": "a564595f.642818",
+        "name": "debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 850,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "b3fac7da.c75e88",
+        "type": "ui_text_input",
+        "z": "a564595f.642818",
+        "name": "Cloud URL",
+        "label": "Cloud URL",
+        "tooltip": "",
+        "group": "19fab5c2.199ffa",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "mode": "text",
+        "delay": "0",
+        "topic": "",
+        "x": 1189,
+        "y": 574,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5d364fad.8f55",
+        "type": "function",
+        "z": "a564595f.642818",
+        "name": "Custom Cloud Logger",
+        "func": "// get selected cloud provider\nvar selected = msg.payload;\n\nvar color = flow.get('colordropdownSelect');\nvar cloudUrls = flow.get(\"cloudUrl2-\" + color);\n\nvar selectedCloudProvider;\nfor (var i=0; i<cloudUrls.length; i++) {\n    if (selected === cloudUrls[i].name) {\n        selectedCloudProvider = cloudUrls[i];\n    }\n}\n\nflow.set(\"selectedCloudProvider\", selectedCloudProvider);\nif (selectedCloudProvider) {\n    msg.payload = selectedCloudProvider;\n} else {\n    msg.payload = cloudUrls[0];   \n}\n\n// disable form fields if no tilt selected\nmsg.enabled = color !== undefined;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 820,
+        "y": 600,
+        "wires": [
+            [
+                "8c041649.eb6c08",
+                "77e30fe.b008ff",
+                "6c3b46e.4c930b8",
+                "4412fb71.bf3c14",
+                "506345fd.217adc",
+                "14666638.c7e0ca"
+            ]
+        ]
+    },
+    {
+        "id": "77e30fe.b008ff",
+        "type": "function",
+        "z": "a564595f.642818",
+        "name": "Logger URL",
+        "func": "// get selected cloud provider\nvar logger = msg.payload;\n\nmsg.payload = logger.url;\nmsg.enabled = msg.enabled && logger.editable; \n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1029,
+        "y": 574,
+        "wires": [
+            [
+                "b3fac7da.c75e88"
+            ]
+        ]
+    },
+    {
+        "id": "6c3b46e.4c930b8",
+        "type": "function",
+        "z": "a564595f.642818",
+        "name": "Logger Enabled",
+        "func": "// get selected cloud provider\nvar logger = msg.payload;\n\nmsg.enabled = msg.enabled && logger.editable; \nmsg.payload = logger.enabled;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1040,
+        "y": 608,
+        "wires": [
+            [
+                "5aefe2bb.89f70c"
+            ]
+        ]
+    },
+    {
+        "id": "5aefe2bb.89f70c",
+        "type": "ui_switch",
+        "z": "a564595f.642818",
+        "name": "",
+        "label": "Cloud Logging Enabled",
+        "tooltip": "",
+        "group": "19fab5c2.199ffa",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": "false",
+        "topic": "",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 1250,
+        "y": 608,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a4f8d54d.548a08",
+        "type": "ui_text_input",
+        "z": "a564595f.642818",
+        "name": "Cloud Name",
+        "label": "Cloud Name",
+        "tooltip": "Name of Cloud Logger (ie. \"Custom Google Sheets\", \"Brewfather\", etc)",
+        "group": "19fab5c2.199ffa",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "mode": "text",
+        "delay": "0",
+        "topic": "",
+        "x": 1210,
+        "y": 540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4412fb71.bf3c14",
+        "type": "function",
+        "z": "a564595f.642818",
+        "name": "Logger Name",
+        "func": "// get selected cloud provider\nvar logger = msg.payload;\n\nmsg.payload = logger.name !== \"Add New\" ? logger.name : \"\";\nmsg.enabled = msg.enabled && logger.editable; \n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1040,
+        "y": 540,
+        "wires": [
+            [
+                "a4f8d54d.548a08"
+            ]
+        ]
+    },
+    {
+        "id": "506345fd.217adc",
+        "type": "function",
+        "z": "a564595f.642818",
+        "name": "Can Save Logger",
+        "func": "// get selected cloud provider\nvar logger = msg.payload;\n\nmsg.payload = logger;\nmsg.enabled = msg.enabled && logger.editable; \n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1050,
+        "y": 640,
+        "wires": [
+            [
+                "6b767321.77a73c"
+            ]
+        ]
+    },
+    {
+        "id": "6b767321.77a73c",
+        "type": "ui_button",
+        "z": "a564595f.642818",
+        "name": "Save Logger",
+        "group": "19fab5c2.199ffa",
+        "order": 11,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Save Logger",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "",
+        "x": 1230,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6140ccf8.194ff4",
+        "type": "ui_button",
+        "z": "a564595f.642818",
+        "name": "Delete Logger",
+        "group": "19fab5c2.199ffa",
+        "order": 12,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Delete Logger",
+        "tooltip": "",
+        "color": "white",
+        "bgcolor": "red",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "",
+        "x": 1240,
+        "y": 660,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "14666638.c7e0ca",
+        "type": "function",
+        "z": "a564595f.642818",
+        "name": "Can Delete Logger",
+        "func": "// get selected cloud provider\nvar logger = msg.payload;\n\nmsg.payload = logger;\nmsg.enabled = msg.enabled && logger.deletable;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1050,
+        "y": 660,
+        "wires": [
+            [
+                "6140ccf8.194ff4"
             ]
         ]
     }
